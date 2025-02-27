@@ -1,5 +1,5 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@tag"])
 
 type Query {
   """
@@ -40,6 +40,21 @@ type User @key(fields: "id") {
   The users current saved shipping address
   """
   shippingAddress: String
+
+  """
+  Fraud detection score for the user
+  """
+  fraudScore: Float @tag(name: "internal")  
+
+  """
+  Users connected social accounts
+  """
+  socialAccounts: String @tag(name: "experimental")
+}
+
+type AdminUser @tag(name: "internal") {
+  id: ID!
+  name: String
 }
 
 """

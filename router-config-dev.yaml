@@ -1,13 +1,18 @@
 supergraph:
   listen: 127.0.0.1:4000
+  introspection: true
+
+sandbox:
+  enabled: true
+homepage:
+  enabled: false
+include_subgraph_errors:
+  all: true
+plugins:
+  # Enable with the header, Apollo-Expose-Query-Plan: true
+  experimental.expose_query_plan: true
 
 telemetry:
   instrumentation:
     spans:
       mode: spec_compliant
-
-headers:
-  all:
-    request:
-      - propagate:
-          matching: .*

@@ -47,7 +47,7 @@ A specific product sold by our store. This contains all the high level details b
 See Variant for more info.
 """
 type Product @key(fields: "id") @key(fields: "upc") @tag(name: "partner") {
-  id: ID! @tag(name: "internal")
+  id: ID!
   upc: ID!
   title: String
   description: String
@@ -60,6 +60,11 @@ type Product @key(fields: "id") @key(fields: "upc") @tag(name: "partner") {
   Variants of the products to view specific size/color/price options
   """
   variants(searchInput: VariantSearchInput = {}): [Variant]
+
+  """
+  Optional internal id to help categorize the product
+  """
+  internalId: ID! @tag(name: "internal")
 }
 
 """
