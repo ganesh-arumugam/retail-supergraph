@@ -1,5 +1,16 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+  @link(url: "https://specs.apollo.dev/federation/v2.10", import: ["@key"])
+
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
 type Query {
   """
@@ -9,9 +20,10 @@ type Query {
 }
 
 """
-Returns information about a specific purchase
+Returns information about a specific purchase.
+TTL 120s — base order data (buyer id, item ids) is immutable after placement.
 """
-type Order @key(fields: "id") {
+type Order @key(fields: "id") @cacheControl(maxAge: 120) {
   """
   Each order has a unique id which is separate from the user or items they bought
   """
@@ -20,13 +32,13 @@ type Order @key(fields: "id") {
   """
   The user who made the purchase
   """
-  buyer: User!
+  buyer: User! @cacheControl(inheritMaxAge: true)
 
   """
   A list of all the items they purchased. This is the Variants, not the Products so we know exactly which
   product and which size/color/feature was bought
   """
-  items: [Variant!]!
+  items: [Variant!]! @cacheControl(inheritMaxAge: true)
 }
 
 type User @key(fields: "id", resolvable: false) {

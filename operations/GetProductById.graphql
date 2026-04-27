@@ -1,0 +1,13 @@
+# Get Product details by product id
+query GetProductById($productId: ID!) {
+  product(id: $productId) {
+    id
+    title
+    upc
+    variants {
+      id
+      price
+      size
+    }
+  }
+}

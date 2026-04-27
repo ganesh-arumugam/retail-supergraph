@@ -1,5 +1,19 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.10"
+    import: ["@key", "@context", "@external", "@fromContext"]
+  )
+
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
 "A review of a given product by a specific user"
 type Review @key(fields: "id") {
@@ -18,11 +32,88 @@ type Review @key(fields: "id") {
   product: Product
 }
 
+enum SubscriptionType {
+  SINGLE
+  DOUBLE
+}
+
 type Product @key(fields: "upc") {
   upc: ID!
   reviews: [Review!]
+
+  """
+  Returns true if this product is recommended for the requesting user's
+  subscription tier. Pass subscriptionType explicitly from the client or
+  inject it via a Rhai script/coprocessor in the Router.
+
+  Note: @fromContext cannot be used directly here. Product is a top-level entity
+  reachable via variant.product and other root-field paths that don't go through
+  User, so the composition satisfiability check can't guarantee the context is
+  always set. Use User.forYouProducts for the @fromContext-powered version.
+  """
+  foryou(subscriptionType: SubscriptionType): Boolean
 }
 
-type User @key(fields: "id", resolvable: false) {
+"""
+A product entry in a user's personalised feed.
+
+ForYouProduct is an entity (@key: upc) with NO root query field. The only way to
+reach it is via User.forYouProducts, which means User is ALWAYS the ancestor in the
+query path. This satisfies the composition satisfiability check for @fromContext:
+the validator can prove that userContext is set on every path to this type.
+
+This is the correct pattern for @fromContext in Apollo Federation — the
+context-injected field belongs on an entity that is exclusively accessed through
+the context-setting entity (User), not on a top-level entity like Product that is
+directly reachable from root fields.
+
+Redis cache key anatomy for ForYouProduct.foryou:
+  repr segment  — base64({"__typename":"ForYouProduct","upc":"product:X"})
+                  Same for all users requesting the same product UPC.
+  hash segment  — base64(hash of subgraph query document)
+                  @fromContext inlines subscriptionType into the query sent to this
+                  subgraph, so SINGLE and DOUBLE users produce DIFFERENT hash segments
+                  for the same product entity → distinct Redis keys → no collision.
+"""
+type ForYouProduct @key(fields: "upc") @cacheControl(maxAge: 60) {
+  "Product UPC — entity key, matches Product.upc."
+  upc: ID!
+
+  "The product entity for this feed entry."
+  product: Product!
+
+  """
+  True if this product is recommended for the user's subscription tier.
+  subscriptionType is injected by the Router via @fromContext — the client
+  never provides this argument.
+  """
+  foryou(
+    subscriptionType: SubscriptionType
+      @fromContext(field: "$userContext { subscriptionType }")
+  ): Boolean
+}
+
+type User @key(fields: "id") @context(name: "userContext") @cacheControl(maxAge: 60) {
   id: ID!
+
+  # subscriptionType is owned by the users subgraph. Declared @external here
+  # so composition can validate the @fromContext selection on ForYouProduct.foryou:
+  # the validator checks that "subscriptionType" is a valid field on userContext (User).
+  subscriptionType: SubscriptionType @external
+
+  "Reviews written by this user."
+  reviews: [Review]
+
+  """
+  Personalised product feed for this user. Each ForYouProduct carries a foryou
+  flag resolved from the user's subscriptionType via @fromContext, demonstrating
+  Apollo Federation context propagation for entity-scoped personalisation.
+
+  Redis cache key analysis:
+  - Different users → different User entity representation → different repr segment.
+  - @fromContext inlines subscriptionType into the subgraph query document →
+    different hash segment for SINGLE vs DOUBLE users.
+  Both segments differ → no cache collision between users.
+  """
+  forYouProducts: [ForYouProduct] @cacheControl(maxAge: 60)
 }

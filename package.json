@@ -5,15 +5,18 @@
   "scripts": {
     "dev": "npm run dev:subgraphs & npm run dev:router",
     "dev:subgraphs": "NODE_ENV=dev nodemon index.js",
-    "dev:router": "rover dev --supergraph-config supergraph-config-dev.yaml --router-config router-config-dev.yaml",
+    "dev:router": "APOLLO_ROVER_DEV_ROUTER_VERSION=2.11.0 APOLLO_KEY='service:ganesh-resp-caching:5KeANQMIb2eORFSdKkROMQ' APOLLO_GRAPH_REF='ganesh-resp-caching' rover dev --supergraph-config supergraph-config-dev.yaml --router-config router-config-dev.yaml",
     "start": "node index.js",
     "test": "npm run test:compile && npm run test:compose",
     "test:compose": "APOLLO_ELV2_LICENSE=accept rover supergraph compose --config supergraph-config-dev.yaml --output supergraph.graphql",
-    "test:compile": "tsc"
+    "test:compile": "tsc",
+    "router:start": "APOLLO_KEY='service:ganesh-resp-caching:5KeANQMIb2eORFSdKkROMQ' APOLLO_GRAPH_REF='ganesh-resp-caching' ./router --supergraph supergraph.graphql --config router-config-dev.yaml --log info",
+    "mcp": "npm run dev:subgraphs & rover dev --mcp mcp.yaml --supergraph-config supergraph-config-dev.yaml --router-config router-config-dev.yaml"
   },
   "dependencies": {
-    "@apollo/server": "^4.10.4",
-    "@apollo/subgraph": "^2.8.1",
+    "@apollo/server": "^5.4.0",
+    "@apollo/subgraph": "^2.13.1",
+    "@as-integrations/express4": "^1.1.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",

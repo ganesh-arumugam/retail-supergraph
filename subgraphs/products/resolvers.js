@@ -1,9 +1,17 @@
-import {PRODUCTS, VARIANTS} from "./data.js";
+import { PRODUCTS, VARIANTS } from "./data.js";
 
 export const getVariantById = (id) => VARIANTS.find((it) => it.id === id);
 export const getProductById = (id) => PRODUCTS.find((it) => it.id === id);
 
 export const resolvers = {
+  Mutation: {
+    updateProduct: (_, args, ctx) => {
+      console.log("id " + args, " ", ctx);
+    },
+    computed: (_, args, ctx) => {
+      console.log("fields level " + args, " ", ctx);
+    },
+  },
   Query: {
     product: (_, { id }) => getProductById(id),
     variant: (_, { id }) => getVariantById(id),
@@ -34,6 +42,8 @@ export const resolvers = {
       return getProductById(ref.id || ref.upc);
     },
     upc: (parent) => parent.id,
+    internalId: (parent) => `internal-${parent.id}`,
+    foryou: (_, args) => (args ? true : false),
     variants(parent, { searchInput }) {
       const variants = getProductById(parent.id).variants.map((it) =>
         getVariantById(it.id)
@@ -46,7 +56,11 @@ export const resolvers = {
       }
       return variants;
     },
-    releaseDate: () => getRandomDate().toISOString()
+    releaseDate: () => getRandomDate().toISOString(),
+    productSetting(parent, { storeId }) {
+      console.log("Verify values", parent, storeId);
+      return { price: "4", available: false };
+    },
   },
   Variant: {
     __resolveReference(ref) {
@@ -66,4 +80,4 @@ const getRandomDate = () => {
 
   // Add the random number of days to today's date
   return new Date(today.getTime() + randomDays * 24 * 60 * 60 * 1000);
-}
+};

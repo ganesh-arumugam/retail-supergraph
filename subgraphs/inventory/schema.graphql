@@ -1,5 +1,8 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.10"
+    import: ["@key", "@interfaceObject"]
+  )
 
 type Variant @key(fields: "id") {
   id: ID!
@@ -14,6 +17,8 @@ type Variant @key(fields: "id") {
 Inventory details about a specific Variant
 """
 type Inventory {
+  id: ID!
+
   """
   Returns true if the inventory count is greater than 0
   """
@@ -23,4 +28,6 @@ type Inventory {
   The raw count of not purchased items in the warehouse
   """
   inventory: Int
+
+  description: String
 }

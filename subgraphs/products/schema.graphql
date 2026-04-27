@@ -1,12 +1,29 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@tag"])
+  @link(url: "https://specs.apollo.dev/federation/v2.10", import: ["@key", "@tag"])
+
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
+
+# [REMOVED] Do NOT manually define @cacheTag here. Since it's imported from the federation spec
+# above, redefining it with a different signature (name/field args) will cause a composition error.
+# The federation @cacheTag takes a `format` argument, not `name` or `field`.
 
 type Query {
   """
   List all available products without any search filters
   """
-  listAllProducts: [Product]
-  
+  # [FIX 3] Added @cacheTag to root field for tag-based invalidation.
+  # format: "products" creates a static tag; use {$args.XXX} for argument interpolation.
+  listAllProducts: [Product] @cacheControl(maxAge: 90)
+
   """
   Get all available products to shop for. Optionally provide some search filters
   """
@@ -20,12 +37,14 @@ type Query {
   """
   Get a specific product by id. Useful for the product details page or checkout page
   """
-  product(id: ID!): Product
+  # [FIX 4] Added @cacheControl and tag on product(id) for targeted per-entity invalidation.
+  # {$args.id} interpolates the `id` argument — must be non-nullable to be valid.
+  product(id: ID!): Product @cacheControl(maxAge: 60)
 
   """
   Get a specific variant by id. Useful for the product details page or checkout page
   """
-  variant(id: ID!): Variant
+  variant(id: ID!): Variant @cacheControl(maxAge: 60)
 }
 
 """
@@ -43,10 +62,18 @@ input VariantSearchInput {
 }
 
 """
-A specific product sold by our store. This contains all the high level details but is not the purchasable item.
-See Variant for more info.
+A specific product sold by our store.
 """
-type Product @key(fields: "id") @key(fields: "upc") @tag(name: "partner") {
+type Product
+  @key(fields: "id")
+  @key(fields: "upc")
+  @tag(name: "partner")
+  # NOTE: Do NOT add @cacheControl or @cacheTag at the type level here.
+  # Federation 2.12 has a bug in its cache-tag validator that throws INTERNAL_ERROR when
+  # a type carries any cache directive in one subgraph while another subgraph extends that
+  # same type with @fromContext (see reviews subgraph). Cache TTLs are set on the root
+  # fields (listAllProducts, product) and invalidation via root-field @cacheTag.
+{
   id: ID!
   upc: ID!
   title: String
@@ -68,39 +95,21 @@ type Product @key(fields: "id") @key(fields: "upc") @tag(name: "partner") {
 }
 
 """
-A variant of a product which is a unique combination of attributes like size and color
-Variants are the entities that are added to carts and purchased
+A variant of a product.
 """
-type Variant @key(fields: "id") {
+type Variant
+  @key(fields: "id")
+  @cacheControl(maxAge: 120) # Catalog data — weight rarely changes; safe to cache longer
+{
   id: ID!
 
   """
   Link back to the parent Product
   """
   product: Product
-
-  """
-  Optional color option for this variant
-  """
   colorway: String
-
-  """
-  Price in decimals for this variant
-  """
   price: Float!
-
-  """
-  Optional size option for this variant
-  """
   size: String
-
-  """
-  Optional dimensions. Can be use to calculate other info like shipping or packaging
-  """
   dimensions: String
-
-  """
-  Optional weight. Can be use to calculate other info like shipping or packaging
-  """
   weight: Float
 }

@@ -1,16 +1,36 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@tag"])
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.10"
+    import: ["@key", "@context", "@tag"]
+  )
+
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
 type Query {
   """
-  Get the current user from our fake "auth" headers
+  Get the current user from our fake "auth" headers.
   Set the "x-user-id" header to the user id.
   """
-  user: User
+  user: User @cacheControl(maxAge: 60, scope: PRIVATE)
+
+  """
+  List all users. Used for cache-key inspection tests that need to query
+  multiple users (with different subscriptionType values) in a single request.
+  """
+  users: [User] @cacheControl(maxAge: 60, scope: PRIVATE)
 }
 
 "An user account in our system"
-type User @key(fields: "id") {
+type User @key(fields: "id") @context(name: "userContext") @cacheControl(maxAge: 30) { # shippingAddress can change on profile update — keep short
   id: ID!
 
   """
@@ -34,7 +54,7 @@ type User @key(fields: "id") {
   """
   The users previous purchases
   """
-  orders: [Order]
+  orders: [Order] @cacheControl(inheritMaxAge: true)
 
   """
   The users current saved shipping address
@@ -44,12 +64,15 @@ type User @key(fields: "id") {
   """
   Fraud detection score for the user
   """
-  fraudScore: Float @tag(name: "internal")  
+  fraudScore: Float @tag(name: "internal")
 
   """
   Users connected social accounts
   """
   socialAccounts: String @tag(name: "experimental")
+
+  "Sub type"
+  subscriptionType: SubscriptionType
 }
 
 type AdminUser @tag(name: "internal") {
@@ -74,6 +97,11 @@ enum PaymentType {
   CREDIT_CARD
   DEBIT_CARD
   BANK_ACCOUNT
+}
+
+enum SubscriptionType {
+  SINGLE
+  DOUBLE
 }
 
 type Order @key(fields: "id", resolvable: false) {

@@ -1,0 +1,50 @@
+sequenceDiagram
+    participant Inspector as MCP Inspector<br/>(Browser)
+    participant Auth0 as Auth0<br/>(OAuth Provider)
+    participant MCP as Apollo MCP Server
+    participant GraphQL as GraphQL API
+
+    Note over Inspector,GraphQL: Pre-Registered Client Configuration
+    Note right of Inspector: Client ID: G64sNtsNTCRcNV9feUElpf00mO9bwpkg<br/>Client Secret: a6opiEn...4d9w2w9RkZNClNomXxzHo5ngI06...<br/>Redirect URI: http://localhost:6274/oauth/<br/>Scopes: read:schema execute:queries introspect:schema
+
+    Note over Inspector,GraphQL: 1. Initial Connection
+    Inspector->>MCP: Connect to http://127.0.0.1:8000/mcp
+    MCP-->>Inspector: 401 Unauthorized<br/>+ OAuth metadata discovery
+    Note right of MCP: Returns:<br/>- Authorization server URL<br/>- Required scopes<br/>- Bearer token requirements
+
+    Note over Inspector,GraphQL: 2. OAuth Authorization Flow Begins
+    Inspector->>Auth0: GET /authorize<br/>?client_id=G64sNts...<br/>&redirect_uri=http://localhost:6274/oauth/<br/>&response_type=code<br/>&scope=read:schema execute:queries<br/>&audience=http://localhost:8000/mcp-example
+    
+    Auth0->>Inspector: Opens browser with login page
+    Note right of Auth0: User authenticates<br/>(if not already logged in)
+    
+    Inspector->>Auth0: User grants permission
+    Auth0-->>Inspector: 302 Redirect to<br/>http://localhost:6274/oauth/?code=BiPRCK...
+
+    Note over Inspector,GraphQL: 3. Token Exchange
+    Inspector->>Auth0: POST /oauth/token<br/>{grant_type: authorization_code<br/>client_id: G64sNts...<br/>client_secret: a6opiEn...<br/>code: BiPRCK...<br/>redirect_uri: http://localhost:6274/oauth/}
+    
+    Auth0->>Auth0: Validate:<br/>- Client credentials<br/>- Authorization code<br/>- Redirect URI match
+    
+    Auth0-->>Inspector: {access_token: eyJhbGc...<br/>token_type: Bearer<br/>expires_in: 86400}
+    Note right of Auth0: JWT token valid for 24 hours
+
+    Note over Inspector,GraphQL: 4. Authenticated Connection
+    Inspector->>MCP: Initialize MCP<br/>Authorization: Bearer eyJhbGc...
+    MCP->>MCP: Validate JWT:<br/>- Signature verification<br/>- Expiration check<br/>- Scope validation
+    MCP-->>Inspector: Server capabilities<br/>{tools: {...}, serverInfo: {...}}
+    
+    Note over Inspector,GraphQL: 5. Tool Execution
+    Inspector->>MCP: tools/list<br/>Authorization: Bearer eyJhbGc...
+    MCP->>MCP: Check token & scopes
+    MCP-->>Inspector: Available tools list
+    
+    Inspector->>MCP: tools/call (execute GraphQL query)<br/>Authorization: Bearer eyJhbGc...
+    MCP->>GraphQL: Execute query
+    GraphQL-->>MCP: Query results
+    MCP-->>Inspector: Tool execution results
+
+    Note over Inspector,GraphQL: 6. Token Refresh (after expiry)
+    Inspector->>Auth0: POST /oauth/token<br/>{grant_type: refresh_token<br/>refresh_token: ...}<br/>OR repeat authorization flow
+    Auth0-->>Inspector: New access_token
+    Inspector->>MCP: Continue with new token

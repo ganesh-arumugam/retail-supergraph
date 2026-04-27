@@ -1,6 +1,16 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+  @link(url: "https://specs.apollo.dev/federation/v2.10", import: ["@key"])
 
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
 type User @key(fields: "id") {
   id: ID!
@@ -8,7 +18,7 @@ type User @key(fields: "id") {
   """
   Suggest products for this user, optionally pass in a specific product id to compare too
   """
-  recommendedProducts(productId: ID = null): [Product]
+  recommendedProducts(productId: ID = null): [Product] @cacheControl(maxAge: 120, scope: PRIVATE)
 }
 
 type Product @key(fields: "id") {

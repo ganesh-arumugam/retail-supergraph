@@ -20,6 +20,8 @@ export const users = [
     },
     orders: [{ id: "order:1" }, { id: "order:2" }],
     shippingAddress: "123 Main St",
+    subscriptionType: "SINGLE",
+    loyaltyPoints: 120,
   },
   {
     id: "user:2",
@@ -36,7 +38,9 @@ export const users = [
       subtotal: 600.25,
     },
     orders: [{ id: "order:3" }],
-    shippingAddress: "123 Main St",
+    shippingAddress: "456 Oak Ave",
+    subscriptionType: "SINGLE",
+    loyaltyPoints: 85,
   },
   {
     id: "user:3",
@@ -55,6 +59,8 @@ export const users = [
     ],
     cart: {},
     orders: [{ id: "order:4" }, { id: "order:5" }, { id: "order:6" }],
-    shippingAddress: "123 Main St",
+    shippingAddress: "789 Pine Rd",
+    subscriptionType: "DOUBLE",
+    loyaltyPoints: 340,
   },
 ];

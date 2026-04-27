@@ -1,0 +1,37 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.5"
+    import: ["@tag", "@requiresScopes"]
+  )
+
+"""
+Contact Directive
+"""
+directive @contact(name: String!, url: String, description: String) on SCHEMA
+
+extend schema
+  @contact(
+    name: "EAI Team"
+    url: "EAI_GraphQL_L3@humana.com"
+    description: "AppID: APP000350 | SRE: EAI_GraphQL_L3@humana.com"
+  )
+
+scalar CountryCode @tag(name: "test-channel")
+scalar Currency
+
+type Query {
+  productInfo(productId: String!, planId: String!): ProductDetails
+    @tag(name: "test-channel")
+    @requiresScopes(scopes: [["Applications.*.Read"], ["product-read"]])
+  countryCodeDetails(data: CountryCode): String @tag(name: "test-channel")
+  currencyDetails(data: Currency): String
+}
+
+type ProductDetails @tag(name: "test-channel") {
+  productId: String
+  planId: String
+  planName: String
+  planYear: Int
+  planStatus: String
+}

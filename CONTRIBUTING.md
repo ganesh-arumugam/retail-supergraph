@@ -9,7 +9,7 @@
 Excited about Apollo and want to make it better? We’re excited too!
 
 Apollo is a community of developers just like you, striving to create the best tools and libraries around GraphQL. We
-welcome anyone who wants to contribute or provide constructive feedback, no matter the age or level of experience. If
+welcome anyone who wants to contribute or provide constructive feedback, no matter the age or level of experience. If 
 you want to help but don't know where to start, let us know, and we'll find something for you.
 
 Oh, and if you haven't already, join the [Apollo community](https://community.apollographql.com/).

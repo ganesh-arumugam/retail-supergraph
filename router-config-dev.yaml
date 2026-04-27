@@ -1,6 +1,19 @@
 supergraph:
   listen: 127.0.0.1:4000
   introspection: true
+  query_planning:
+    warmed_up_queries: 100  # Pre-plan top 100 queries on schema reload to avoid cold-start latency spikes
+    cache:
+      redis:
+        urls: ["redis://127.0.0.1:6380"]
+
+authorization:
+  require_authentication: false # Enforces authentication on all requests
+# authentication:
+#   router:
+#     jwt:
+#       jwks:
+#         - url: https://dev-2rd4k1xxfpjky67u.us.auth0.com/.well-known/jwks.json
 
 sandbox:
   enabled: true
@@ -8,11 +21,108 @@ homepage:
   enabled: false
 include_subgraph_errors:
   all: true
-plugins:
-  # Enable with the header, Apollo-Expose-Query-Plan: true
-  experimental.expose_query_plan: true
+
+rhai:
+  scripts: "./"
+  main: "main.rhai"
 
 telemetry:
+  exporters:
+    logging:
+      stdout:
+        enabled: true
+        format: text
+    metrics:
+      prometheus:
+        enabled: true
+        listen: 127.0.0.1:9090
+        path: /metrics
+      # ── Dynatrace via OTLP ──────────────────────────────────────────────────
+      # Metrics are pushed to the local OTel collector (otel-collector-config-dynatrace.yaml)
+      # which forwards them to Dynatrace's ingest endpoint.
+      # Set DT_ENVIRONMENT_ID and DT_API_TOKEN env vars before starting.
+      otlp:
+        enabled: true
+        endpoint: http://127.0.0.1:4317    # OTel collector grpc receiver
+        protocol: grpc
+        temporality: delta                  # Dynatrace prefers delta for counters
+      common:  # Service name makes it easy to filter metrics in your APM
+        service_name: "apollo-router"
+        resource:
+          "deployment.environment.name": "dev"
+    tracing:
+      common:  # Common tracing settings
+        service_name: "apollo-router"
+        resource:
+          "deployment.environment.name": "dev"
+        sampler: 100.0       # Sample 100% in dev; lower (e.g. 0.1) in high-traffic prod
+        parent_based_sampler: true  # Honor incoming trace context from clients/upstreams
+        # Span attribute limits — prevent runaway data sent to APM
+        max_attributes_per_span: 128
+        max_events_per_span: 128
+      otlp:
+        enabled: true
+        endpoint: http://127.0.0.1:4317    # OTel collector → Dynatrace
+        protocol: grpc
+        batch_processor:  # Tune to avoid "channel is full" drops under load
+          scheduled_delay: 5s
+          max_export_batch_size: 512
+          max_concurrent_exports: 1
+          max_export_timeout: 30s
+          max_queue_size: 2048
+      propagation:
+        trace_context: true
   instrumentation:
     spans:
       mode: spec_compliant
+      router:
+        attributes:
+          http.request.method: true
+          http.response.status_code: true
+    events:
+      router:
+        request: info
+        response: info
+        error: info
+    instruments:
+      router:
+        http.server.request.duration:
+          attributes:
+            http.request.method: true
+      # Cache hit/miss metrics for response cache observability
+      cache:
+        apollo.router.response.cache:
+          attributes:
+            subgraph.name:
+              subgraph_name: true
+
+headers:
+  all: # Header rules for all subgraphs
+    request:
+      - propagate:
+          matching: .*
+
+# Response caching with Redis
+# Invalidation endpoint requires INVALIDATION_SHARED_KEY env var to be set
+response_cache:
+  enabled: true
+  debug: true
+  invalidation:
+    listen: 127.0.0.1:4005
+    path: /invalidation
+  subgraph:
+    all:
+      enabled: true
+      ttl: 300s # Required fallback TTL
+      redis:
+        urls: ["redis://127.0.0.1:6380"]
+        required_to_start: false
+        fetch_timeout: 150ms
+        insert_timeout: 500ms
+        namespace: "responseCache"
+      invalidation:
+        enabled: true
+        shared_key: ${env.INVALIDATION_SHARED_KEY:-dev-invalidation-key}
+    subgraphs:
+      products:
+        ttl: 120s  # Products change less often

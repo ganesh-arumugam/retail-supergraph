@@ -1,0 +1,94 @@
+# OpenTelemetry Collector config for Dynatrace export
+#
+# Receives OTLP from Apollo Router (grpc :4317 / http :4318) and forwards
+# traces, metrics, and logs to Dynatrace via its native OTLP ingest endpoint.
+#
+# Required environment variables:
+#   DT_ENVIRONMENT_ID  — e.g. "abc12345"  (SaaS) or your Managed cluster ID
+#   DT_API_TOKEN       — Dynatrace API token with scopes:
+#                          metrics.ingest, openTelemetryTrace.ingest, logs.ingest
+#
+# Dynatrace OTLP endpoint (SaaS):
+#   https://{DT_ENVIRONMENT_ID}.live.dynatrace.com/api/v2/otlp
+#
+# Dynatrace OTLP endpoint (Managed / Platform):
+#   https://{your-cluster}/e/{DT_ENVIRONMENT_ID}/api/v2/otlp
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    send_batch_size: 10000
+    timeout: 10s
+
+  # Add resource attributes that Dynatrace uses for entity detection and filtering
+  resource:
+    attributes:
+      - key: service.name
+        value: apollo-router
+        action: upsert
+      - key: service.namespace
+        value: retail-supergraph
+        action: upsert
+      # Dynatrace uses dt.entity.* for entity mapping — optional but recommended
+      - key: dt.security_context
+        value: apollo-router
+        action: upsert
+
+  # Filter out noisy health-check spans to keep trace volume manageable
+  filter/health_checks:
+    error_mode: ignore
+    traces:
+      span:
+        - 'attributes["http.route"] == "/health"'
+        - 'attributes["http.target"] == "/health"'
+
+exporters:
+  # Dynatrace OTLP exporter (traces, metrics, logs all use the same endpoint)
+  otlphttp/dynatrace:
+    endpoint: https://${env:DT_ENVIRONMENT_ID}.live.dynatrace.com/api/v2/otlp
+    headers:
+      Authorization: "Api-Token ${env:DT_API_TOKEN}"
+    tls:
+      insecure: false
+    # Retry on transient failures — Dynatrace ingest can return 429 under load
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 100
+
+  # Keep debug exporter for local dev verification (remove in prod)
+  debug:
+    verbosity: normal   # Use "detailed" when troubleshooting
+
+service:
+  telemetry:
+    logs:
+      level: "info"
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource, filter/health_checks]
+      exporters: [otlphttp/dynatrace, debug]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace, debug]
+
+    logs:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace, debug]

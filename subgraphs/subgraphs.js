@@ -1,4 +1,4 @@
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express4';
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginInlineTraceDisabled } from '@apollo/server/plugin/disabled';
@@ -15,6 +15,7 @@ import { getProductsSchema } from './products/subgraph.js';
 import { getReviewsSchema } from './reviews/subgraph.js';
 import { getShippingSchema } from './shipping/subgraph.js';
 import { getUsersSchema } from './users/subgraph.js';
+import { users } from './users/data.js';
 
 export const LOCAL_SUBGRAPH_CONFIG = [
   {
@@ -85,6 +86,24 @@ export const startSubgraphs = async (httpPort) => {
 
     console.log(`Setting up [${subgraphConfig.name}] subgraph at http://localhost:${serverPort}${path}`);
   }
+
+  // ── Test control endpoints (local dev only) ─────────────────────────────
+  // Mutate in-memory user data at runtime so hash-cascade tests can change
+  // shippingAddress between cache fills without restarting the server.
+  app.post('/__test/set-address', bodyParser.json(), (req, res) => {
+    const { userId, address } = req.body;
+    const user = users.find(u => u.id === userId);
+    if (!user) return res.status(404).json({ error: `unknown user: ${userId}` });
+    user.shippingAddress = address;
+    res.json({ ok: true, userId, address });
+  });
+
+  app.get('/__test/get-address', (req, res) => {
+    const { userId } = req.query;
+    const user = users.find(u => u.id === userId);
+    if (!user) return res.status(404).json({ error: `unknown user: ${userId}` });
+    res.json({ userId, address: user.shippingAddress });
+  });
 
   // Start entire monolith at given port
   await new Promise((resolve) => httpServer.listen({ port: serverPort }, resolve));

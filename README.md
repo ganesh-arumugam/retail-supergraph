@@ -28,3 +28,11 @@ If you want to run this supergraph locally you can clone this [GitHub repo](http
 ## Disclaimer
 
 The code in this repository is experimental and has been provided for reference purposes only. Community feedback is welcome but this project may not be supported in the same way that repositories in the official [Apollo GraphQL GitHub organization](https://github.com/apollographql) are. If you need help you can file an issue on this repository, [contact Apollo](https://www.apollographql.com/contact-sales) to talk to an expert, or create a ticket directly in Apollo Studio.
+
+## Response Caching
+
+To enable response caching, you need to set the `INVALIDATION_SHARED_KEY` environment variable in the router configuration.
+
+```bash
+INVALIDATION_SHARED_KEY='dev-invalidation-key' ./test-cache.sh
+```

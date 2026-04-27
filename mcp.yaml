@@ -1,0 +1,37 @@
+# Point to the Router (not individual subgraphs)
+endpoint: http://localhost:4000/
+
+transport:
+  type: streamable_http
+  port: 8000
+
+  auth:
+    servers:
+      - https://dev-2rd4k1xxfpjky67u.us.auth0.com
+
+    audiences:
+      - http://localhost:8000/mcp-example
+
+    resource: http://127.0.0.1:8000/mcp
+
+    scopes:
+      - read:schema
+      - execute:queries
+      - introspect:schema
+
+operations:
+  source: local
+  paths:
+    - ./operations/GetProductById.graphql
+
+introspection:
+  execute:
+    enabled: true
+  introspect:
+    enabled: true
+  search:
+    enabled: true
+  validate:
+    enabled: true
+
+log_level: debug

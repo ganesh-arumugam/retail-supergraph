@@ -1,0 +1,47 @@
+services:
+  # ── OpenTelemetry Collector → Dynatrace ────────────────────────────────────
+  # Receives OTLP from Apollo Router and forwards to Dynatrace.
+  # Required env vars: DT_ENVIRONMENT_ID, DT_API_TOKEN
+  # Start with: docker compose --profile dynatrace up -d
+  otel-collector:
+    profiles: [dynatrace]
+    image: otel/opentelemetry-collector-contrib:0.105.0
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./otel-collector-config-dynatrace.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC (Router → collector)
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Collector's own Prometheus metrics (optional)
+    environment:
+      - DT_ENVIRONMENT_ID=${DT_ENVIRONMENT_ID}
+      - DT_API_TOKEN=${DT_API_TOKEN}
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   environment:
+  #     - REDIS_HOSTS=local:redis:6379
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     - redis
+  
+  redisinsight:
+    image: redis/redisinsight:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8001:5540" 
+    depends_on:
+      - redis 
+
+volumes:
+  redis-data:

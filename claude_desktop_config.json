@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "apollo-graphql": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://127.0.0.1:8000/mcp",
+        "8000",
+        "--static-oauth-client-metadata",
+        "{\"client_id\":\"G64sNtsNTCRcNV9feUElpf00mO9bwpkg\",\"client_name\":\"AA_MCP_API\",\"redirect_uris\":[\"http://localhost:8000/callback\"],\"scope\":\"read:schema execute:queries\"}",
+        "--verbose"
+      ]
+    }
+  }
+}

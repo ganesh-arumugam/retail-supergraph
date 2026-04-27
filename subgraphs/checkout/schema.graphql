@@ -1,5 +1,8 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires"])
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.10"
+    import: ["@key", "@external", "@requires"]
+  )
 
 type Mutation {
   cart: CartMutations
@@ -18,7 +21,13 @@ type ResultWithMessage {
 
 type CheckoutResult {
   successful: Boolean
-  orderID: ID
+  order: Order
+  status: Boolean
+}
+
+type Order @key(fields: "id") {
+  id: ID!
+  # buyer: User! @external
 }
 
 type User @key(fields: "id") {
@@ -28,13 +37,14 @@ type User @key(fields: "id") {
   The user's active cart session. Once the cart items have been purchases, they transition to an Order
   """
   cart: Cart
+
+  #fraudScore: Float @external
 }
 
 """
 An user's saved cart session. Only one cart can be active at a time
 """
 type Cart @key(fields: "userId") {
-
   """
   Each user can only have one cart so the ID is the same as the user ID
   """

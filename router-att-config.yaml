@@ -1,0 +1,121 @@
+supergraph:
+  listen: 0.0.0.0:4000
+  path: /graphql
+  introspection: true
+  homepage:
+    enabled: false
+
+override_subgraph_url:
+  products: http://localhost:4001
+  accounts: http://localhost:4002
+
+authentication:
+  router:
+    jwt:
+      header_name: authorization
+      header_value_prefix: Bearer
+      # Added on_error: Continue so the coprocessor fires even for bad tokens.
+      # Without this, JWT failures short-circuit the pipeline before the coprocessor runs.
+      # Remove if you intentionally want to block unauthenticated requests before coprocessing.
+      on_error: Continue
+      jwks:
+        - url: https://your-idp.example.com/.well-known/jwks.json
+
+connectors:
+  expose_sources_in_context: true
+  sources:
+    products.products_rest:
+      override_url: https://api.example.com/products
+
+coprocessor:
+  url: http://127.0.0.1:8081
+  timeout: 2s
+  client:
+    experimental_http2: http2only
+
+  # 1) Client ↔ Router (RouterService)
+  router:
+    request:
+      # Only run when a specific header is present
+      condition:
+        eq:
+          - request_header: should-execute-copro
+          - "enabled"
+      headers: true
+      method: true
+      path: true
+      context:
+        selective:
+          - apollo::authentication::jwt_claims
+    response:
+      headers: true
+      body: true
+      status_code: true
+      context: all
+
+  # 2) Router ↔ Supergraph (SupergraphService)
+  supergraph:
+    request:
+      headers: true
+      body: true
+      context:
+        selective:
+          - apollo::supergraph::operation_name
+          - apollo::demand_control::estimated_cost
+    response:
+      headers: true
+      body: true
+      context: all
+
+  # 3) Query planning / execution fan-out (ExecutionService)
+  # NOTE: ExecutionService does NOT support conditions — correct that none is set here.
+  execution:
+    request:
+      query_plan: true
+      context:
+        selective:
+          - apollo::demand_control::estimated_cost
+    response:
+      context:
+        selective:
+          - apollo::demand_control::actual_cost
+
+  # 4) Router ↔ Subgraphs (SubgraphService)
+  subgraph:
+    all:
+      request:
+        headers: true
+        body: true
+        service_name: true # provides subgraph name like products
+        uri: true
+        subgraph_request_id: true
+        context:
+          selective:
+            - apollo::authentication::jwt_claims
+            - apollo::supergraph::operation_name
+      response:
+        headers: true
+        body: true
+        service_name: true
+        status_code: true
+        subgraph_request_id: true
+        context: all
+
+  # 5) Router ↔ Connectors (ConnectorRequestService)
+  connector:
+    all:
+      request:
+        headers: true
+        body: true
+        uri: true
+        method: true
+        service_name: true
+        context:
+          selective:
+            # Populated because expose_sources_in_context: true is set above
+            - apollo_connectors::sources_in_query_plan
+      response:
+        headers: true
+        body: true
+        service_name: true
+        context: all

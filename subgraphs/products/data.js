@@ -38,8 +38,7 @@ export const PRODUCTS = [
     title: "Air Jordan 4 Retro",
     description:
       "Jordan 4 Retro is a black sneaker with red accents from the iconic jordan brand",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/274477/3.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/274477/3.jpg",
   },
   {
     id: "product:5",
@@ -47,8 +46,7 @@ export const PRODUCTS = [
     title: "Air Jordan 3 Retro Black Gold",
     description:
       "Jordan 3 Retro is a black and gold sneaker with cement accents from the iconic jordan brand",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/317410/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/317410/1.jpg",
   },
   {
     id: "product:6",
@@ -56,8 +54,7 @@ export const PRODUCTS = [
     title: "Yeezy Boost 350 V2",
     description:
       "Yeezy Boost 350 V2 is a popular sneaker from Kanye West's collaboration with Adidas, featuring a distinct stripe and innovative Primeknit material.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/801936/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/801936/1.jpg",
   },
   {
     id: "product:7",
@@ -65,8 +62,7 @@ export const PRODUCTS = [
     title: "Nike Air Max 97",
     description:
       "Nike Air Max 97 features a sleek design with reflective lines and full-length Max Air cushioning.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803738/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803738/1.jpg",
   },
   {
     id: "product:8",
@@ -74,8 +70,7 @@ export const PRODUCTS = [
     title: "Converse Chuck Taylor All Star",
     description:
       "The classic Converse Chuck Taylor All Star sneaker, known for its timeless design and versatility.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803681/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803681/1.jpg",
   },
   {
     id: "product:9",
@@ -83,8 +78,7 @@ export const PRODUCTS = [
     title: "Puma Suede Classic",
     description:
       "Puma Suede Classic is an iconic sneaker with a stylish suede upper and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803682/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803682/1.jpg",
   },
   {
     id: "product:10",
@@ -92,8 +86,7 @@ export const PRODUCTS = [
     title: "Reebok Classic Leather",
     description:
       "Reebok Classic Leather is a timeless sneaker known for its sleek design and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803683/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803683/1.jpg",
   },
   {
     id: "product:11",
@@ -101,8 +94,7 @@ export const PRODUCTS = [
     title: "Vans Old Skool",
     description:
       "Vans Old Skool is a classic skate shoe featuring the iconic side stripe and durable canvas upper.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803684/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803684/1.jpg",
   },
   {
     id: "product:12",
@@ -110,8 +102,7 @@ export const PRODUCTS = [
     title: "New Balance 574",
     description:
       "New Balance 574 is a versatile sneaker known for its retro style and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803685/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803685/1.jpg",
   },
   {
     id: "product:13",
@@ -119,8 +110,7 @@ export const PRODUCTS = [
     title: "Adidas Stan Smith",
     description:
       "Adidas Stan Smith is a classic tennis shoe featuring a clean design and premium leather upper.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803686/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803686/1.jpg",
   },
   {
     id: "product:14",
@@ -128,8 +118,7 @@ export const PRODUCTS = [
     title: "Asics Gel-Lyte III",
     description:
       "Asics Gel-Lyte III is known for its split tongue design and comfortable gel cushioning.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803687/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803687/1.jpg",
   },
   {
     id: "product:15",
@@ -137,8 +126,7 @@ export const PRODUCTS = [
     title: "Saucony Jazz Original",
     description:
       "Saucony Jazz Original is a retro running shoe with a stylish design and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803688/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803688/1.jpg",
   },
   {
     id: "product:16",
@@ -146,8 +134,7 @@ export const PRODUCTS = [
     title: "Fila Disruptor II",
     description:
       "Fila Disruptor II is a chunky sneaker with a bold design and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803689/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803689/1.jpg",
   },
   {
     id: "product:17",
@@ -155,8 +142,7 @@ export const PRODUCTS = [
     title: "Nike Blazer Mid '77",
     description:
       "Nike Blazer Mid '77 is a classic basketball sneaker with a retro design and versatile style.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803690/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803690/1.jpg",
   },
   {
     id: "product:18",
@@ -164,8 +150,7 @@ export const PRODUCTS = [
     title: "Under Armour Curry 8",
     description:
       "Under Armour Curry 8 is a performance basketball shoe designed in collaboration with Stephen Curry.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803691/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803691/1.jpg",
   },
   {
     id: "product:19",
@@ -173,8 +158,7 @@ export const PRODUCTS = [
     title: "Hoka One One Clifton 7",
     description:
       "Hoka One One Clifton 7 is a highly cushioned running shoe designed for maximum comfort.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803692/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803692/1.jpg",
   },
   {
     id: "product:20",
@@ -182,8 +166,7 @@ export const PRODUCTS = [
     title: "Brooks Ghost 13",
     description:
       "Brooks Ghost 13 is a versatile running shoe known for its smooth ride and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803693/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803693/1.jpg",
   },
   {
     id: "product:21",
@@ -191,8 +174,7 @@ export const PRODUCTS = [
     title: "Salomon Speedcross 5",
     description:
       "Salomon Speedcross 5 is a trail running shoe with aggressive traction and durable construction.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803694/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803694/1.jpg",
   },
   {
     id: "product:22",
@@ -200,8 +182,7 @@ export const PRODUCTS = [
     title: "Merrell Moab 2 Ventilator",
     description:
       "Merrell Moab 2 Ventilator is a hiking shoe known for its breathable design and durable construction.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803695/1.jpg",
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803695/1.jpg",
   },
   {
     id: "product:23",
@@ -209,9 +190,8 @@ export const PRODUCTS = [
     title: "Columbia Newton Ridge Plus II",
     description:
       "Columbia Newton Ridge Plus II is a waterproof hiking boot with a stylish design and comfortable fit.",
-    mediaUrl:
-      "https://cdn.flightclub.com/750/TEMPLATE/803696/1.jpg",
-  }
+    mediaUrl: "https://cdn.flightclub.com/750/TEMPLATE/803696/1.jpg",
+  },
 ];
 
 export const VARIANTS = [
