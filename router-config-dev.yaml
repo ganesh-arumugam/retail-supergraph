@@ -79,22 +79,46 @@ telemetry:
         attributes:
           http.request.method: true
           http.response.status_code: true
+      # ── Dynatrace span/event additions commented out — re-enable after fixing
+      # ── attribute schema compatibility with Router v2.11.0
+      # supergraph:
+      #   attributes:
+      #     graphql.operation.name:
+      #       operation_name: true
+      #     graphql.operation.type:
+      #       operation_kind: true
+      # subgraph:
+      #   attributes:
+      #     subgraph.name:
+      #       subgraph_name: true
+      #     graphql.operation.name:
+      #       operation_name: true
+      #     http.response.status_code: true
     events:
       router:
         request: info
         response: info
         error: info
-    instruments:
-      router:
-        http.server.request.duration:
-          attributes:
-            http.request.method: true
-      # Cache hit/miss metrics for response cache observability
-      cache:
-        apollo.router.response.cache:
-          attributes:
-            subgraph.name:
-              subgraph_name: true
+      # subgraph events (Dynatrace) — commented out with spans above
+      # subgraph:
+      #   request: info
+      #   response: info
+      #   error: error
+    # instruments:  ← commented out; re-enable when fixing Dynatrace metric dimensions
+    #   router:
+    #     http.server.request.duration:
+    #       attributes:
+    #         http.request.method: true
+    #         http.response.status_code: true
+    #         graphql.operation.name:
+    #           operation_name: true
+    #         graphql.operation.type:
+    #           operation_kind: true
+    #   cache:
+    #     apollo.router.response.cache:
+    #       attributes:
+    #         subgraph.name:
+    #           subgraph_name: true
 
 headers:
   all: # Header rules for all subgraphs

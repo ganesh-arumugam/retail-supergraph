@@ -174,14 +174,26 @@ fn subgraph_service(service, subgraph) {
             }
 
             // Sum hit/miss counts across all entity types for this subgraph call.
+            // Guard each field access: on a full cache hit some Router versions omit
+            // the "miss" key entirely (e.g. { hit: 1 } instead of { hit: 1, miss: 0 }),
+            // which would cause a type error if added to an integer directly.
             let total_hit  = 0;
             let total_miss = 0;
             for v in cache_info.values() {
-                total_hit  += v["hit"];
-                total_miss += v["miss"];
+                let h = v["hit"];
+                let m = v["miss"];
+                if h != () { total_hit  += h; }
+                if m != () { total_miss += m; }
             }
 
-            let sg_status = if total_miss == 0 && total_hit > 0 {
+            // Both counts being zero means cache_info existed but carried no data
+            // (e.g. cache not active for this entity type). Skip rather than
+            // misreporting as "miss".
+            if total_hit == 0 && total_miss == 0 {
+                return;
+            }
+
+            let sg_status = if total_hit > 0 && total_miss == 0 {
                 "hit"
             } else if total_hit > 0 && total_miss > 0 {
                 "partial_hit"

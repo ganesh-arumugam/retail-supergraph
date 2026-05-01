@@ -109,6 +109,18 @@ flush_redis() {
   dim "  Redis flushed."
 }
 
+# Delete all response-cache entries for a single subgraph, leaving others intact.
+# Used to synthesise a partial-hit scenario without flushing the whole cache.
+evict_subgraph_cache() {
+  local sg="$1"
+  local keys
+  keys=$($REDIS_CLI --scan --pattern "responseCache:*:subgraph:${sg}:*" 2>/dev/null)
+  if [ -n "$keys" ]; then
+    echo "$keys" | xargs $REDIS_CLI DEL > /dev/null 2>&1
+  fi
+  dim "  Evicted Redis keys for subgraph '${sg}'."
+}
+
 # ─── Pre-flight ───────────────────────────────────────────────────────────────
 
 bold "\n╔══════════════════════════════════════════════════════════════╗"
@@ -193,28 +205,36 @@ assert_header_one_of "x-response-cache-reviews"  "Sc6: reviews header present"  
 
 # ─── Scenario 7: Multi-subgraph, partial hit ─────────────────────────────────
 
-bold "\n── Scenario 7: Multi-subgraph, partial hit — products cached, reviews cold ──"
-dim "  Strategy: warm products cache with GetProducts (products-only query),"
-dim "  then run GetProductsWithReviews which hits products (hit) + reviews (cold)."
+bold "\n── Scenario 7: Multi-subgraph, partial hit — products cached, reviews evicted ──"
+dim "  Strategy: warm both subgraphs with one GetProductsWithReviews call, then"
+dim "  evict only the reviews Redis keys so the next call hits products but misses reviews."
 dim "  Expected: x-response-cache = partial_hit"
 
 flush_redis
 
-# Warm products cache only (no reviews involved)
-dim "  Warming products cache..."
-gql '{"operationName":"GetProducts","query":"query GetProducts { listAllProducts { id title } }"}'
-gql '{"operationName":"GetProducts","query":"query GetProducts { listAllProducts { id title } }"}'
+# One cold call caches both subgraphs.
+dim "  Warming both subgraphs..."
+gql '{"operationName":"GetProductsWithReviews","query":"query GetProductsWithReviews { listAllProducts { id title upc reviews { id } } }"}'
 
-# Now query products + reviews — products from cache, reviews cold
+# Evict only reviews — products cache stays intact.
+evict_subgraph_cache "reviews"
+
+# Products served from cache, reviews cold → partial_hit
 gql '{"operationName":"GetProductsWithReviews","query":"query GetProductsWithReviews { listAllProducts { id title upc reviews { id } } }"}'
 assert_header_eq "x-response-cache"              "partial_hit" "Sc7: aggregate is partial_hit"
 assert_header_eq "x-response-cache-products"     "hit"         "Sc7: products subgraph hit (cached)"
-assert_header_eq "x-response-cache-reviews"      "miss"        "Sc7: reviews subgraph miss (cold)"
+assert_header_eq "x-response-cache-reviews"      "miss"        "Sc7: reviews subgraph miss (evicted)"
 
 # ─── Scenario 8: Multi-subgraph, both warm (hit) ─────────────────────────────
 
 bold "\n── Scenario 8: Multi-subgraph, fully warm — both subgraphs hit ──"
-dim "  Second call to GetProductsWithReviews after Scenario 7 warmed both subgraphs"
+dim "  Self-contained flush+warm cycle: first call is miss, second call must be hit."
+dim "  Validates the core customer requirement: request 1 = miss, request 2 = hit."
+
+flush_redis
+
+gql '{"operationName":"GetProductsWithReviews","query":"query GetProductsWithReviews { listAllProducts { id title upc reviews { id } } }"}'
+assert_header_eq "x-response-cache"          "miss" "Sc8-cold: first call is miss"
 
 gql '{"operationName":"GetProductsWithReviews","query":"query GetProductsWithReviews { listAllProducts { id title upc reviews { id } } }"}'
 assert_header_eq "x-response-cache"          "hit" "Sc8: aggregate is hit"

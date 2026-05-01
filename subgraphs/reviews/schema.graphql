@@ -16,7 +16,7 @@ directive @cacheControl(
 ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
 "A review of a given product by a specific user"
-type Review @key(fields: "id") {
+type Review @key(fields: "id") @cacheControl(maxAge: 60) {
   id: ID!
 
   "The plain text version of the review"
@@ -37,9 +37,9 @@ enum SubscriptionType {
   DOUBLE
 }
 
-type Product @key(fields: "upc") {
+type Product @key(fields: "upc") @cacheControl(maxAge: 60) {
   upc: ID!
-  reviews: [Review!]
+  reviews: [Review!] @cacheControl(inheritMaxAge: true)
 
   """
   Returns true if this product is recommended for the requesting user's
